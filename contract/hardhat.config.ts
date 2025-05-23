@@ -11,6 +11,11 @@ const config: HardhatUserConfig = {
   solidity: '0.8.28',
   networks: {
     // Todo: 원하는 네트워크를 선택하여 설정합니다.
+    sepolia: {
+      url: rpcUrl,
+      accounts: privateKey ? [privateKey] : [],
+      chainId: 11155111,
+    }
   },
 };
 

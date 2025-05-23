@@ -4,14 +4,16 @@ import { exceptions } from '../../../common/exceptions/exception.config';
 
 @Injectable()
 export class CalculatorService {
-  constructor(private readonly ethersService: EthersService) {}
+  constructor(private readonly ethersService: EthersService) { }
 
   async calculate(a: number, b: number, operation: string) {
     try {
       // Todo: calculate의 값을 리턴합니다.
+      return this.ethersService.calculate(a, b, operation);
       return;
     } catch (error) {
       //  Todo: 에러를 응답합니다.(exceptions.createBadRequestException(error.message))
+      throw exceptions.createBadRequestException(error.message);
     }
   }
 
@@ -30,6 +32,7 @@ export class CalculatorService {
           }
       */
 
+
       return;
     } catch (error) {
       /*
@@ -45,6 +48,10 @@ export class CalculatorService {
         - 예외: 그 외 오류들
           → exceptions.createBadRequestException(error.message)
       */
+      if (error.reason == "No calculation history") {
+        throw exceptions.NO_CALCULATION_HISTORY;
+      }
+      throw exceptions.createBadRequestException(error.message);
     }
   }
 
