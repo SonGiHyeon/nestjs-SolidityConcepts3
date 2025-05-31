@@ -53,11 +53,28 @@ export class EthersService {
 
   // 위 코드는 지우지 마세요.
 
-  async calculate(a: number, b: number, operation: string) {
-    // Todo: calculate 함수를 실행하여 Calculate 이벤트의 값을 받아 리턴합니다.
-    // ⚠️ 리턴은 Number 단위로 리턴합니다.
+  async calculate(a: number, b: number, operation: string): Promise<number> {
+    const tx = await this.contract.calculate(a, b, operation);
+    const receipt = await tx.wait();
 
-    return Number(this.contract.calculate(a, b, operation));
+    const event = receipt.logs
+      .map((log) => {
+        try {
+          return this.contract.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find(
+        (parsed): parsed is LogDescription =>
+          parsed !== null && parsed.name === 'Calculate'
+      );
+
+    if (!event) {
+      throw new Error('Calculate event not found');
+    }
+
+    return Number(event.args.result);
   }
 
   async getLastResult(address: string) {
@@ -75,6 +92,6 @@ export class EthersService {
   async getHistoryItem(address: string) {
     // Todo: getHistoryItem의 값을 리턴합니다.
 
-    return this.getHistoryItem(address);
+    return this.contract.getHistoryItem(address);
   }
 }

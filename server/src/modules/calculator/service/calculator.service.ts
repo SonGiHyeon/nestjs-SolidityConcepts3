@@ -9,8 +9,8 @@ export class CalculatorService {
   async calculate(a: number, b: number, operation: string) {
     try {
       // Todo: calculate의 값을 리턴합니다.
-      return this.ethersService.calculate(a, b, operation);
-      return;
+
+      return await this.ethersService.calculate(a, b, operation);
     } catch (error) {
       //  Todo: 에러를 응답합니다.(exceptions.createBadRequestException(error.message))
       throw exceptions.createBadRequestException(error.message);
@@ -32,8 +32,22 @@ export class CalculatorService {
           }
       */
 
+      const getLastResult = await this.ethersService.getLastResult(address);
+      if (getLastResult.length === 0) {
+        throw exceptions.NO_CALCULATION_HISTORY;
+      }
 
-      return;
+      // console.log(getLastResult);
+
+      const [a, b, result, operation] = getLastResult;
+      // console.log(a, b, result, operation);
+
+      return {
+        a: Number(a),
+        b: Number(b),
+        result: Number(result),
+        operation: operation,
+      };
     } catch (error) {
       /*
         Todo: 스마트 컨트랙트에서 발생한 오류 유형에 따라 예외를 정의합니다.
@@ -48,7 +62,8 @@ export class CalculatorService {
         - 예외: 그 외 오류들
           → exceptions.createBadRequestException(error.message)
       */
-      if (error.reason == "No calculation history") {
+
+      if (error.reason === 'No calculation history') {
         throw exceptions.NO_CALCULATION_HISTORY;
       }
       throw exceptions.createBadRequestException(error.message);
@@ -61,9 +76,21 @@ export class CalculatorService {
       // ⚠️ bigint 타입은 JSON으로 변환 시 number로 변환 필요
       // length가 없을 시 NO_CALCULATION_HISTORY 오류 반환
 
-      return;
+      const getHistoryLength = Number(
+        await this.ethersService.getHistoryLength(address)
+      );
+
+      // console.log(getHistoryLength);
+      if (getHistoryLength <= 0) {
+        throw exceptions.NO_CALCULATION_HISTORY;
+      }
+
+      // console.log('getHistoryLength', getHistoryLength);
+      return getHistoryLength;
     } catch (error) {
       //  Todo: 에러를 응답합니다.(exceptions.createBadRequestException(error.message))
+
+      throw exceptions.createBadRequestException(error.message);
     }
   }
 
@@ -91,7 +118,26 @@ export class CalculatorService {
           ]
       */
 
-      return;
+      const res: {
+        a: number;
+        b: number;
+        result: number;
+        operation: string;
+      }[] = [];
+      const getHistoryItem = await this.ethersService.getHistoryItem(address);
+
+      console.log(getHistoryItem);
+
+      getHistoryItem.forEach((item) => {
+        res.push({
+          a: Number(item.a),
+          b: Number(item.b),
+          result: Number(item.result),
+          operation: item.operation,
+        });
+      });
+
+      return res;
     } catch (error) {
       /*
         Todo: 스마트 컨트랙트에서 발생한 오류 유형에 따라 예외를 정의합니다.
@@ -106,6 +152,11 @@ export class CalculatorService {
         - 예외: 그 외 오류들
           → exceptions.createBadRequestException(error.message)
       */
+
+      if (error.reason === 'No calculation history') {
+        throw exceptions.NO_CALCULATION_HISTORY;
+      }
+      throw exceptions.createBadRequestException(error.message);
     }
   }
 }
